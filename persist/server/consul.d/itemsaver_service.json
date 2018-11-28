@@ -1,0 +1,20 @@
+{
+  "services": [
+    {
+      "id": "itemsaver",
+      "name": "itemsaver",
+      "tags": [
+      ],
+      "address": "172.17.0.3",
+      "port": 1234,
+      "checks": [
+        {
+        "DeregisterCriticalServiceAfter": "1m",
+        "tcp": "172.17.0.3:1234",
+        "interval": "10s",
+        "timeout": "3s"
+        }
+      ]
+    }
+  ]
+}
