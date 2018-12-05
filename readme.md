@@ -256,6 +256,10 @@
 
     go run crawler/main.go -crawl_service_name=crawl -item_saver_service_name=itemsaver -consul_address=localhost:8500
 
+#### 微服务化部署
+
+关于微服务化部署可以参考：[微服务化部署](https://github.com/qinglianghe/crawler/blob/master/docker/)
+
 ### 责任声明
 
 如果使用次项目，触犯了任何商业利益，本人不承担任何责任。本人承诺，此项目本人未使用于任何的商业用途，也为将数据分享过任何人。如果此项目触犯了贵公司的相关的利益，本人愿意立即删除此项目。

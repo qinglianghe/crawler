@@ -71,7 +71,7 @@
 
 ### 部署
 
-在manage节点，使用`crawler/docker/`目录下的[dcoker-compose.yml](https://github.com/qinglianghe/crawler/blob/master/docker/dcoker-compose.yml)文件，用`docker satck`进行部署，`dcoker-compose.yml`定义了项目中需要启动的service、每个service需要的image、重启策略、启动的顺序等：
+在manage节点，使用`crawler/docker/`目录下的[dcoker-compose.yml](https://github.com/qinglianghe/crawler/blob/master/docker/docker-compose.yml)文件，用`docker satck`进行部署，`dcoker-compose.yml`定义了项目中需要启动的service、每个service需要的image、重启策略、启动的顺序等：
 
     ubuntu@swarm-manager:~/go/src/crawler/docker$ docker stack deploy --compose-file docker-compose.yml crawler
     Creating network crawler_overlay_network
