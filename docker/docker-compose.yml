@@ -1,0 +1,94 @@
+version: "3"
+
+services:
+  elastic:
+    image: elasticsearch:6.4.1
+    ports:
+      - 9200:9200
+    networks:
+      - overlay_network
+    deploy:
+      mode: global
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+
+  redis:
+    image: redis
+    ports:
+      - 6379:6379
+    networks:
+      - overlay_network
+    deploy:
+      mode: global
+      placement:
+        constraints:
+          - node.role == manager  
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+
+  itemsaver:
+    image: heqingliang/itemsaver
+    ports:
+      - 1234:1234
+    environment:
+      ELASTIC_SERVICE_NAME: elastic
+    networks:
+      - overlay_network
+    depends_on:
+      - elastic
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    command: sh -c '/wait-for-it.sh -t 0 elastic:9200 --strict -- itemsaver'
+  
+  crawl:
+    image: heqingliang/crawl
+    ports:
+      - 9987:9987
+    networks:
+      - overlay_network
+    deploy:
+      mode: replicated
+      replicas: 3
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      update_config:
+        parallelism: 1
+        delay: 10s
+
+  engine:
+    image: heqingliang/engine
+    environment:
+      ITEM_SAVER_SERVICE_NAME: itemsaver
+      CRAWL_SERVICE_NAME: crawl
+      REDIS_SERVICE_NAME: redis
+    networks:
+      - overlay_network
+    depends_on:
+      - itemsaver
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    command: sh -c '/wait-for-it.sh -t 0 itemsaver:1234 --strict -- 
+                    /wait-for-it.sh -t 0 crawl:9987 --strict -- 
+                    /wait-for-it.sh -t 0 redis:6379 --strict -- 
+                    engine'
+
+networks:
+  overlay_network:
+    driver: overlay

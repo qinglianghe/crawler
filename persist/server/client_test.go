@@ -59,7 +59,7 @@ func TestItemSaver(t *testing.T) {
             Marriage:    "未婚",
             Education:   "中专",
             Occupation:  "其他职业",
-            NativePlace: "广东广州",
+            WorkPlace:   "广东广州",
             Xinzuo:      "狮子座",
             House:       "打算婚后购房",
             Car:         "未购车",
