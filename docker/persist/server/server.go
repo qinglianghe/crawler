@@ -45,7 +45,6 @@ func main() {
 }
 
 func serverRPC(host, elasticURL, index string) error {
-
     client, err := elastic.NewClient(
         elastic.SetURL(elasticURL),
         elastic.SetSniff(false))
