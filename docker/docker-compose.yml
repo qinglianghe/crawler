@@ -27,7 +27,7 @@ services:
       mode: global
       placement:
         constraints:
-          - node.role == manager  
+          - node.role == manager 
       restart_policy:
         condition: on-failure
         delay: 5s
@@ -44,7 +44,8 @@ services:
     depends_on:
       - elastic
     deploy:
-      mode: global
+      mode: replicated
+      replicas: 1
       restart_policy:
         condition: on-failure
         delay: 5s
@@ -79,7 +80,8 @@ services:
     depends_on:
       - itemsaver
     deploy:
-      mode: global
+      mode: replicated
+      replicas: 1
       restart_policy:
         condition: on-failure
         delay: 5s
@@ -88,6 +90,21 @@ services:
                     /wait-for-it.sh -t 0 crawl:9987 --strict -- 
                     /wait-for-it.sh -t 0 redis:6379 --strict -- 
                     engine'
+  
+  visualizer:
+    image: dockersamples/visualizer:stable
+    ports:
+     - 8080:8080
+    networks:
+      - overlay_network
+    stop_grace_period: 1m30s
+    volumes:
+     - "/var/run/docker.sock:/var/run/docker.sock"
+    deploy:
+      mode: global
+      placement:
+        constraints:
+          - node.role == manager
 
 networks:
   overlay_network:

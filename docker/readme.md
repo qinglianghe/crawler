@@ -84,12 +84,13 @@
 查看服务的状态：
 
     ubuntu@swarm-manager:~/go/src/crawler/docker$ docker service ls
-    ID            NAME               MODE        REPLICAS  IMAGE
-    0mx9nau0l052  crawler_elastic    global      1/1       elasticsearch:6.4.1
-    95vldgo1l115  crawler_redis      global      1/1       redis
-    ort8ukftix0u  crawler_crawl      replicated  3/3       heqingliang/crawl
-    p9myrfzi6g3x  crawler_engine     global      3/3       heqingliang/engine
-    zqxknuufbc20  crawler_itemsaver  global      3/3       heqingliang/itemsaver
+    ID            NAME                MODE        REPLICAS  IMAGE
+    4kemuft6xemi  crawler_redis       global      1/1       redis:latest
+    68jesb8s8vpq  crawler_visualizer  global      1/1       dockersamples/visualizer:stable
+    nyixtjfslhx7  crawler_crawl       replicated  3/3       heqingliang/crawl
+    s619rlggdtuy  crawler_elastic     global      1/1       elasticsearch:6.4.1
+    usyes2uxi46f  crawler_itemsaver   replicated  1/1       heqingliang/itemsaver
+    wb67dgkpeccf  crawler_engine      replicated  1/1       heqingliang/engine
 
 查看某个服务(crawl)的状态：
 
@@ -98,3 +99,7 @@
     czpr9pjacx7j  crawler_crawl.1  heqingliang/crawl  swarm-manager  Running        Running 2 minutes ago
     jeqwjb0bja3d  crawler_crawl.2  heqingliang/crawl  swarm-worker1  Running        Running 2 minutes ago
     sjgsvyncrc5o  crawler_crawl.3  heqingliang/crawl  swarm-worker2  Running        Running 3 minutes ago
+
+在浏览器上输入`http://192.168.33.10:8080`，访问visualizer服务，通过可视化界面可以看到各个服务的界面：
+
+![visualizer.png](https://github.com/qinglianghe/crawler/blob/master/images/visualizer.png)
