@@ -100,6 +100,6 @@
     jeqwjb0bja3d  crawler_crawl.2  heqingliang/crawl  swarm-worker1  Running        Running 2 minutes ago
     sjgsvyncrc5o  crawler_crawl.3  heqingliang/crawl  swarm-worker2  Running        Running 3 minutes ago
 
-在浏览器上输入`http://192.168.33.10:8080`，访问visualizer服务，通过可视化界面可以看到各个服务的界面：
+在浏览器上输入`http://192.168.33.10:8080`，访问visualizer服务，通过可视化界面可以看到各个服务的状态：
 
 ![visualizer.png](https://github.com/qinglianghe/crawler/blob/master/images/visualizer.png)
