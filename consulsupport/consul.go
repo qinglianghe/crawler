@@ -58,6 +58,5 @@ func GetConfig(client *consulapi.Client, configName string) (string, error) {
     }
 
     log.Printf("Get config %s: %s\n", configName, string(kv.Value))
-
     return string(kv.Value), nil
 }
