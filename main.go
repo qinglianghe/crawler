@@ -85,6 +85,8 @@ func main() {
     })
 }
 
+// getHostWithServiceName 从consul中获得对应名称服务的host:port
+// 如果存在多个服务，返回第一个可用的服务
 func getHostWithServiceName(consulClient *consulapi.Client, serviceName string) (string, error) {
     hosts, err := consulsupport.DiscoveryService(consulClient, serviceName)
     if err != nil {

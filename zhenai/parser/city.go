@@ -12,8 +12,8 @@ var (
 
 // ParseCity 用于解析从ParseCityList获得城市的信息
 // 这个页面中包含用户信息，和城市列表信息
-// 通过profileRe正则表达式获得用户信息，对应的解析器为ProfileParser
-// 通过cityURLRe正则表达式获得用户信息，对应的解析器为ParseCity
+// 通过profileRe正则表达式获得用户信息的URL，对应的解析器为ProfileParser
+// 通过cityURLRe正则表达式获得用户信息的URL，对应的解析器为ParseCity
 func ParseCity(_ string, contents []byte) engine.ParseResult {
     matches := profileRe.FindAllSubmatch(contents, -1)
 

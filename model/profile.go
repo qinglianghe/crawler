@@ -39,10 +39,10 @@ type Profile struct {
     // Xinzuo 星座
     Xinzuo string
 
-    // 是否已购房
+    // House 是否已购房
     House string
 
-    // 是否已购车
+    // Car 是否已购车
     Car string
 }
 

@@ -8,7 +8,7 @@ import (
 var cityListRe = regexp.MustCompile(`<a href="(http://www.zhenai.com/zhenghun/[0-9a-z]+)"[^>]*>([^<]+)</a>`)
 
 // ParseCityList 通过cityListRe正则表达式解析城市列表
-// 每个城市对应的解析器为ParseCity
+// 每个城市的URL对应的解析器为ParseCity
 func ParseCityList(url string, contents []byte) engine.ParseResult {
     matches := cityListRe.FindAllSubmatch(contents, -1)
 

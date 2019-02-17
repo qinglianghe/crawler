@@ -122,7 +122,7 @@ func (p *ProfileParser) Serialize() (name string, args interface{}) {
 }
 
 // NewProfileParser 用于创建ProfileParser
-// name是由城市页面调用ParseCity所得的结果
+// name：用户的名字，是由城市页面调用ParseCity所得的结果
 func NewProfileParser(name string) *ProfileParser {
     return &ProfileParser{
         userName: name,
