@@ -53,10 +53,10 @@
         // Xinzuo 星座
         Xinzuo string
 
-        // 是否已购房
+        // House 是否已购房
         House string
 
-        // 是否已购车
+        // Car 是否已购车
         Car string
     }
 ```
@@ -67,7 +67,21 @@
 
 ![crawler_arch.jpg](/images/crawler_arch.jpg)
 
+### main 函数
+
+- 通过consul服务发现获取itemsaver服务对应的host:port，创建itemsaver的rpc连接。启动一个goroutine：用于channel中接收engine爬取的结果(Item)，通过rpc调用itemsaver服务的save接口
+
+- 通过consul服务发现获取crawl服务对应的host:port，crawl服务可能存在多个，为每个crawl服务创建rpc连接，把这些连接放入连接池。启动一个goroutine：定时从consul获取可用的服务，用于更新连接池、使用轮询的方式将连接池中的连接通过channel发送给worker
+
+- 通过consul获得redis对应的host:port
+
+- 创建Request对应的processor
+
+- 创建engine，设置爬取页面首页对应的Request，并启动engine
+
 ### engine
+
+- 启动Scheduler
 
 - 通过`createWorker`函数，创建指定数量的worker(默认为100个)
 
@@ -75,7 +89,7 @@
 
 - 从channel接收worker返回的解析结果
 
-- 如果爬取到了Item，则启动goroutine发送到存储模块的channel
+- 如果爬取到了Item，则启动goroutine发送到itemsaver client的channel
 
 ### Scheduler
 
@@ -89,9 +103,7 @@
 
 - 通过Redis对URL进行去重
 
-- 序列化Request
-
-- 从连接池中获得已连接crawl service的client，通过RPC发送给crawl service
+- 调用main函数创建的processor：序列化Request、从channel中获取连接池中已连接crawl service的client、通过RPC将序列化的Request发送给crawl service
 
 - 通过RPC接收crawl service返回的结果，反序列化后，通过channel发送给engine
 
@@ -99,21 +111,21 @@
 
 - 通过服务的名字从consul获得所有crawl service的host:port，并建立连接，放入连接池
 
-- 启动一个goroutine轮询连接池，实现负载均衡
+- 启动一个goroutine轮询连接池，通过channel发送给worker，从而实现负载均衡
 
-- goroutine会每隔一定的时间，从consul发现服务，更新连接池。
+- goroutine会每隔一定的时间，从consul发现服务，更新连接池
 
 ### crawl service
 
-- 由`crawler/crawl/server/consul.d/crawl_service.json`的配置文件，注册服务`crawl`到Consul集群中
+- 由`crawler/crawl/server/consul.d/`目录下的[crawl_service.json](https://github.com/qinglianghe/crawler/blob/master/crawl/server/consul.d/crawl_service.json)配置文件，注册服务`crawl`到Consul集群中
 
-- 可以注册多个多个服务，但是IP地址必须不同，端口号必须和config配置的`CrawlServiceRPCPort`一样(默认为9987)
+- 可以注册多个多个服务，但是IP地址必须不同，端口号必须和[config](https://github.com/qinglianghe/crawler/blob/master/config/config.go)配置的`CrawlServiceRPCPort`一样(默认为9987)
 
 - crawl service启动后，会启动一个RPC服务`:9987`，用于接收Request请求
 
-- 当crawl service接收到Request请求后，首先会反序列化Request，通过http请求，获得指定URL的页面，并通过Request指定的页面解析器对页面数据进行解析，并将结果序列后，通过RPC发送给客户端
+- 当crawl service接收到Request请求后，首先会反序列化Request，调用fetcher：通过http请求，获得指定URL的页面，并通过Request指定的页面解析器对页面数据进行解析，并将解析的结果序列后，通过RPC发送给客户端
 
-- 爬虫的速度由config配置的`QPS`进行控制
+- 爬虫的速度由[config](https://github.com/qinglianghe/crawler/blob/master/config/config.go)配置的`QPS`进行控制
 
 ### Consul
 
@@ -129,11 +141,11 @@
 
 ### itemsaver service
 
-- 由`crawler/persist/server/consul.d/itemsaver_service.json`的配置文件，注册服务`itemsaver`到Consul集群中
+- 由`crawler/persist/server/consul.d/`目录下的[itemsaver_service.json](https://github.com/qinglianghe/crawler/blob/master/persist/server/consul.d/itemsaver_service.json)配置文件，注册服务`itemsaver`到Consul集群中
 
 - itemsaver service中并没有多个服务创建连接池，如果有多个服务，只使用一个服务。默认使用的是从`getHostWithServiceName`返回的地址
 
-- itemsaver_service.json配置的端口号必须和config配置的`ItemServerRPCPort`一样(默认为1234)
+- `itemsaver_service.json`配置的端口号必须和[config](https://github.com/qinglianghe/crawler/blob/master/config/config.go)配置的`ItemServerRPCPort`一样(默认为1234)
 
 - itemsaver service启动时，会从Consul中获取elasticsearch的URL，并与elasticsearch建立连接
 
@@ -143,15 +155,15 @@
 
 在`crawler/zhenai`目录下，有相应页面的解析代码。每个页面都有一个对应的解析器，用于解析对应的页面的数据。如：
 
-1. [http://www.zhenai.com/zhenghun](http://www.zhenai.com/zhenghun)：起始页面对应解析器为：ParseCityList，用于获取城市列表的URL，每个城市的URL对应的解析器为ParseCity，对应的单元测试函数为TestParseCityList。
+1. [http://www.zhenai.com/zhenghun](http://www.zhenai.com/zhenghun)：起始页面对应解析器为：[ParseCityList](https://github.com/qinglianghe/crawler/blob/master/zhenai/parser/citylist.go)，用于获取城市列表的URL，每个城市的URL对应的解析器为[ParseCity](https://github.com/qinglianghe/crawler/blob/master/zhenai/parser/city.go)，对应的单元测试函数为[TestParseCityList](https://github.com/qinglianghe/crawler/blob/master/zhenai/parser/citylist_test.go)。
 
-2. [http://www.zhenai.com/zhenghun/guangzhou](http://www.zhenai.com/zhenghun/guangzhou)：城市页面对应的解析器为：ParseCity，用于获取城市区域的URL，每个城市区域的URL对应的解析器为ParseCity和用户信息的URL对应的解析器为ProfileParser，对应的单元测试函数为TestParseCity。
+2. [http://www.zhenai.com/zhenghun/guangzhou](http://www.zhenai.com/zhenghun/guangzhou)：城市页面对应的解析器为：[ParseCity](https://github.com/qinglianghe/crawler/blob/master/zhenai/parser/city.go)，用于获取城市区域的URL，每个城市区域的URL对应的解析器为[ParseCity](https://github.com/qinglianghe/crawler/blob/master/zhenai/parser/city.go)和用户信息的URL对应的解析器为[ProfileParser](https://github.com/qinglianghe/crawler/blob/master/zhenai/parser/profile.go)，对应的单元测试函数为[TestParseCity](https://github.com/qinglianghe/crawler/blob/master/zhenai/parser/city_test.go)。
 
-3. 用户信息的解析器为：ProfileParser，用于获取用户信息，对应的单元测试函数为TestParseProfile。
+3. 用户信息的解析器为：[ProfileParser](https://github.com/qinglianghe/crawler/blob/master/zhenai/parser/profile.go)，用于获取用户信息，对应的单元测试函数为[TestParseProfile](https://github.com/qinglianghe/crawler/blob/master/zhenai/parser/profile_test.go)。
 
 ### Parse 序列化和反序列化
 
-在客户端和crawl service通信时，使用的是RPC。所以要对Parse进行序列化和反序列化。在`crawler/crawl/server/types.go`定义有序列化和反序列化接口函数：`SerializedRequest`、`SerializedParseResult`、`DeserializeRequest`、`DeserializeParseResult`。
+在客户端和crawl service通信时，使用的是RPC。所以要对[Request](https://github.com/qinglianghe/crawler/blob/master/engine/types.go)和[ParseResult](https://github.com/qinglianghe/crawler/blob/master/engine/types.go)中的Parse进行序列化和反序列化。在`crawler/crawl/`目录下的[types.go](https://github.com/qinglianghe/crawler/blob/master/crawl/types.go)定义有序列化和反序列化接口函数：`SerializedRequest`、`SerializedParseResult`、`DeserializeRequest`、`DeserializeParseResult`。
 
 ### 运行
 
@@ -211,7 +223,7 @@
     cd crawler/persist/server
 
     # 编译 itemsaver service
-    CGO_ENABLED=0 go build -o itemsaver -a -installsuffix cgo 
+    CGO_ENABLED=0 go build -o itemsaver -a -installsuffix cgo
 
     docker cp itemsaver consul2:/
     docker cp consul.d/itemsaver_service.json consul2:/consul/config/
@@ -259,7 +271,3 @@
 #### 微服务化部署
 
 关于微服务化部署可以参考：[微服务化部署](https://github.com/qinglianghe/crawler/blob/master/docker/)
-
-### 责任声明
-
-如果使用次项目，触犯了任何商业利益，本人不承担任何责任。本人承诺，此项目本人未使用于任何的商业用途，也为将数据分享过任何人。如果此项目触犯了贵公司的相关的利益，本人愿意立即删除此项目。
